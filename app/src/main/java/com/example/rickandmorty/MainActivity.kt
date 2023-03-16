@@ -5,9 +5,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
+import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.rickandmorty.data.CharacterData
 import com.example.rickandmorty.data.ListChangedCallback
@@ -16,7 +14,6 @@ import com.example.rickandmorty.databinding.ActivityMainBinding
 import com.example.rickandmorty.ui.list.ListFragmentDirections
 import com.example.rickandmorty.ui.list.ReturnList
 import com.example.rickandmorty.ui.splash.SplashFragmentDirections
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : ListChangedCallback, AppCompatActivity() {
 
@@ -54,17 +51,32 @@ class MainActivity : ListChangedCallback, AppCompatActivity() {
     }
 
     fun updateList(returnListInt : ReturnList) {
+        if (listData?.newUrl.isNullOrEmpty()) {
+            Log.d("RickAndMorty", "End of the list!!")
+            if (mNavController.currentDestination?.id == R.id.navigation_list) {
+                // update the list
+                returnList?.gotList(null)
+            }
+            return
+        }
         returnList = returnListInt
         listData?.setCallback(this)
         val rQueue = Volley.newRequestQueue(this@MainActivity)
-        rQueue.add(listData?.request)
+        Log.d("RickAndMorty", "About to pull from " + listData?.newUrl)
+
+        val request = StringRequest(listData?.newUrl,
+            { string -> listData?.parseJsonData(string) }, {
+                Log.e("RickAndMorty", "An error occurred")
+            })
+
+        rQueue.add(request)
     }
 
     fun clearList() {
         listData?.resetList()
     }
 
-    override fun listAvailable(charList: ArrayList<CharacterData>) {
+    override fun listAvailable(charList: ArrayList<CharacterData>, nextUrl: String?) {
         // we got back a list, now update the list view
         Log.d("RickAndMorty", "current id = " + mNavController.currentDestination?.id)
         Log.d("RickAndMorty", "My fragment nav id = " + R.id.navigation_list)
@@ -73,6 +85,7 @@ class MainActivity : ListChangedCallback, AppCompatActivity() {
             // update the list
             returnList?.gotList(charList)
         }
+        listData?.newUrl = nextUrl
 
     }
 }

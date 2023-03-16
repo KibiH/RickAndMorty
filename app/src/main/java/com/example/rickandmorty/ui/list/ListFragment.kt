@@ -11,6 +11,7 @@ import android.widget.ListView
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.rickandmorty.MainActivity
 import com.example.rickandmorty.data.CharacterData
 import com.example.rickandmorty.databinding.FragmentListBinding
@@ -62,7 +63,14 @@ class ListFragment : ReturnList, Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val main = activity as MainActivity
-        main.clearList()
+
+        val pullToRefresh: SwipeRefreshLayout = binding.pullToRefresh
+        pullToRefresh.setOnRefreshListener {
+            main.updateList(this) //without a clear list first
+            pullToRefresh.isRefreshing = true
+        }
+
+        //main.clearList()
         main.updateList(this)
     }
 
@@ -71,7 +79,13 @@ class ListFragment : ReturnList, Fragment() {
         _binding = null
     }
 
-    override fun gotList(characterList: ArrayList<CharacterData>) {
+    override fun gotList(characterList: ArrayList<CharacterData>?) {
+        val pullToRefresh: SwipeRefreshLayout = binding.pullToRefresh
+        pullToRefresh.isRefreshing = false
+
+        if (characterList.isNullOrEmpty()) {
+            return
+        }
         val adapter: ArrayAdapter<*> = ListAdapter(requireActivity(), characterList)
         val listView: ListView = binding.charactersList
         listView.adapter = adapter

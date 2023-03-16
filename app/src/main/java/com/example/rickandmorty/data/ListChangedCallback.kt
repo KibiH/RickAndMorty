@@ -1,5 +1,5 @@
 package com.example.rickandmorty.data
 
 interface ListChangedCallback {
-    fun listAvailable(charList: ArrayList<CharacterData>)
+    fun listAvailable(charList: ArrayList<CharacterData>, nextUrl : String?)
 }

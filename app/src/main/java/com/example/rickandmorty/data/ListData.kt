@@ -7,16 +7,15 @@ import org.json.JSONException
 import org.json.JSONObject
 
 class ListData {
-    val url: String = "https://rickandmortyapi.com/api/character/"
+    private val url: String = "https://rickandmortyapi.com/api/character/"
+
+    var newUrl : String? = url
     private var characterList : ArrayList<CharacterData> = ArrayList()
     var mCallback : ListChangedCallback? = null
-
-    public var request: StringRequest = StringRequest(url,
-        { string -> parseJsonData(string) }, {
-            Log.e("RickAndMorty", "An error occurred")
-        })
+    var nextUrl : String? = null
 
     fun resetList() {
+        newUrl = url
         characterList.clear()
     }
 
@@ -27,15 +26,18 @@ class ListData {
        mCallback = callback
     }
 
-    private fun parseJsonData(string: String?) {
+    fun parseJsonData(string: String?) {
         try {
-            val jsonObject = JSONObject(string)
+            val jsonObject = JSONObject(string!!)
             val charsArray: JSONArray = jsonObject.getJSONArray("results")
             for (i in 0 until charsArray.length()) {
                 val character = charsArray.getJSONObject(i)
                 val charData = CharacterData(character.getString("name"), character.getString("species"), character.getString("gender"), character.getString("image"))
                 characterList.add(charData)
             }
+
+            val infoObject = jsonObject.getJSONObject("info")
+            nextUrl = infoObject.getString("next")
 
        } catch (e: JSONException) {
             e.printStackTrace()
@@ -45,7 +47,8 @@ class ListData {
         for(character in characterList) {
             Log.d("RickAndMorty", "Name = " + character.name)
         }
-        mCallback?.listAvailable(characterList)
+        Log.d("RickAndMorty", "Next url = " + nextUrl)
+        mCallback?.listAvailable(characterList, nextUrl)
     }
 
 }
